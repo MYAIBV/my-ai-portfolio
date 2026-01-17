@@ -20,6 +20,7 @@ export default function ShowcaseCard({
   onDelete,
 }: ShowcaseCardProps) {
   const t = useTranslations('showcase');
+  const tCommon = useTranslations('common');
   const tCategories = useTranslations('categories');
 
   return (
@@ -93,14 +94,14 @@ export default function ShowcaseCard({
                 size="sm"
                 onClick={() => onEdit?.(item)}
               >
-                {useTranslations('common')('edit')}
+                {tCommon('edit')}
               </Button>
               <Button
                 variant="danger"
                 size="sm"
                 onClick={() => onDelete?.(item)}
               >
-                {useTranslations('common')('delete')}
+                {tCommon('delete')}
               </Button>
             </>
           )}
