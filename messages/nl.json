@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Er is een fout opgetreden",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "add": "Toevoegen",
+    "search": "Zoeken...",
+    "noResults": "Geen resultaten gevonden",
+    "confirm": "Bevestigen",
+    "back": "Terug"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "login": "Inloggen",
+    "logout": "Uitloggen"
+  },
+  "home": {
+    "title": "AI Portfolio",
+    "subtitle": "Ontdek onze innovatieve AI-projecten",
+    "allCategories": "Alle categorieën",
+    "searchPlaceholder": "Zoek op titel, beschrijving of trefwoorden..."
+  },
+  "categories": {
+    "voice": "Spraak",
+    "whatsapp": "WhatsApp",
+    "chat": "Chat",
+    "image": "Afbeelding",
+    "video": "Video",
+    "automation": "Automatisering",
+    "other": "Overig"
+  },
+  "showcase": {
+    "viewProject": "Bekijk project",
+    "private": "Privé",
+    "public": "Openbaar",
+    "addNew": "Nieuw project toevoegen",
+    "editProject": "Project bewerken",
+    "deleteProject": "Project verwijderen",
+    "deleteConfirm": "Weet je zeker dat je dit project wilt verwijderen?",
+    "form": {
+      "title": "Titel",
+      "titlePlaceholder": "Project titel",
+      "description": "Beschrijving",
+      "descriptionPlaceholder": "Beschrijf het project...",
+      "appUrl": "App URL",
+      "appUrlPlaceholder": "https://app.example.com",
+      "categories": "Categorieën",
+      "keywords": "Trefwoorden",
+      "keywordsPlaceholder": "Voer trefwoorden in, gescheiden door komma's",
+      "visibility": "Zichtbaarheid",
+      "image": "Afbeelding",
+      "uploadImage": "Afbeelding uploaden",
+      "changeImage": "Afbeelding wijzigen"
+    }
+  },
+  "auth": {
+    "login": "Inloggen",
+    "email": "E-mailadres",
+    "emailPlaceholder": "jouw@email.nl",
+    "password": "Wachtwoord",
+    "passwordPlaceholder": "Je wachtwoord",
+    "loginButton": "Inloggen",
+    "loginError": "Ongeldige inloggegevens",
+    "loggingIn": "Bezig met inloggen..."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Beheer je AI-projecten",
+    "allProjects": "Alle projecten",
+    "publicProjects": "Openbare projecten",
+    "privateProjects": "Privé projecten"
+  },
+  "footer": {
+    "copyright": "© {year} My AI. Alle rechten voorbehouden."
+  }
+}

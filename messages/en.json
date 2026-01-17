@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search...",
+    "noResults": "No results found",
+    "confirm": "Confirm",
+    "back": "Back"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "AI Portfolio",
+    "subtitle": "Discover our innovative AI projects",
+    "allCategories": "All categories",
+    "searchPlaceholder": "Search by title, description or keywords..."
+  },
+  "categories": {
+    "voice": "Voice",
+    "whatsapp": "WhatsApp",
+    "chat": "Chat",
+    "image": "Image",
+    "video": "Video",
+    "automation": "Automation",
+    "other": "Other"
+  },
+  "showcase": {
+    "viewProject": "View project",
+    "private": "Private",
+    "public": "Public",
+    "addNew": "Add new project",
+    "editProject": "Edit project",
+    "deleteProject": "Delete project",
+    "deleteConfirm": "Are you sure you want to delete this project?",
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Project title",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the project...",
+      "appUrl": "App URL",
+      "appUrlPlaceholder": "https://app.example.com",
+      "categories": "Categories",
+      "keywords": "Keywords",
+      "keywordsPlaceholder": "Enter keywords separated by commas",
+      "visibility": "Visibility",
+      "image": "Image",
+      "uploadImage": "Upload image",
+      "changeImage": "Change image"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email address",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "loginButton": "Sign in",
+    "loginError": "Invalid credentials",
+    "loggingIn": "Signing in..."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Manage your AI projects",
+    "allProjects": "All projects",
+    "publicProjects": "Public projects",
+    "privateProjects": "Private projects"
+  },
+  "footer": {
+    "copyright": "© {year} My AI. All rights reserved."
+  }
+}
