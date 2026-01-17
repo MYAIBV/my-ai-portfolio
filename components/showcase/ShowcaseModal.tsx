@@ -53,9 +53,9 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      {/* Modal content - horizontal layout, 85% screen size */}
+      {/* Modal content - stacks on mobile, horizontal on desktop */}
       <div
-        className="relative w-[85vw] h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300"
+        className="relative w-[95vw] md:w-[85vw] max-h-[90vh] md:h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -68,10 +68,10 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
           </svg>
         </button>
 
-        {/* Image - left side with pan/zoom effect */}
+        {/* Image - top on mobile, left side on desktop */}
         <div
           ref={imageContainerRef}
-          className="relative w-full md:w-3/5 h-64 md:h-full bg-slate-100 dark:bg-slate-800 flex-shrink-0 overflow-hidden"
+          className="relative w-full md:w-3/5 h-48 sm:h-64 md:h-full bg-slate-100 dark:bg-slate-800 flex-shrink-0 overflow-hidden"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onMouseMove={handleMouseMove}
@@ -113,31 +113,33 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
           )}
         </div>
 
-        {/* Content - right side */}
-        <div className="w-full md:w-2/5 h-full p-8 sm:p-12 overflow-y-auto flex flex-col justify-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            {item.title}
-          </h2>
+        {/* Content - bottom on mobile, right side on desktop */}
+        <div className="w-full md:w-2/5 md:h-full p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
+          <div className="flex flex-col md:justify-center md:min-h-full">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-2 md:mb-6">
+              {item.title}
+            </h2>
 
-          <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
-            {item.description}
-          </p>
+            <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed mb-4 md:mb-8">
+              {item.description}
+            </p>
 
-          {/* Open app button */}
-          <div className="mt-auto pt-6">
-            <a
-              href={item.app_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block"
-            >
-              <Button variant="primary" size="lg" className="text-lg px-8 py-4">
-                {t('viewProject')}
-                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </Button>
-            </a>
+            {/* Open app button */}
+            <div className="md:mt-auto pt-2 md:pt-6">
+              <a
+                href={item.app_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <Button variant="primary" size="md" className="md:text-lg md:px-8 md:py-4">
+                  {t('viewProject')}
+                  <svg className="w-4 h-4 md:w-5 md:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </div>
