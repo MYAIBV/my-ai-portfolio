@@ -1,0 +1,41 @@
+name: CI - Preview Branch
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  ci-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Build project (type check)
+        run: npm run build
+        env:
+          CI: true
+
+      - name: CI Summary
+        run: |
+          echo "## ✅ CI Passed - Preview Branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Vercel will auto-deploy this commit to preview." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "👤 **Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
