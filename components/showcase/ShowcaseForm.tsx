@@ -92,84 +92,93 @@ export default function ShowcaseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Input
-        label={t('title')}
-        placeholder={t('titlePlaceholder')}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-      />
+      {/* Row 1: Title and App URL */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Input
+          label={t('title')}
+          placeholder={t('titlePlaceholder')}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+        <Input
+          label={t('appUrl')}
+          type="url"
+          placeholder={t('appUrlPlaceholder')}
+          value={appUrl}
+          onChange={(e) => setAppUrl(e.target.value)}
+          required
+        />
+      </div>
 
-      <Textarea
-        label={t('description')}
-        placeholder={t('descriptionPlaceholder')}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-        rows={4}
-      />
+      {/* Row 2: Description and Image */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Textarea
+          label={t('description')}
+          placeholder={t('descriptionPlaceholder')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+          rows={6}
+        />
 
-      <Input
-        label={t('appUrl')}
-        type="url"
-        placeholder={t('appUrlPlaceholder')}
-        value={appUrl}
-        onChange={(e) => setAppUrl(e.target.value)}
-        required
-      />
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('image')}
-        </label>
-        <div className="flex items-start gap-4">
-          {imageUrl ? (
-            <div className="relative w-32 h-24 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-              <Image
-                src={imageUrl}
-                alt="Preview"
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-32 h-24 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('image')}
+          </label>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer group"
+          >
+            {imageUrl ? (
+              <>
+                <Image
+                  src={imageUrl}
+                  alt="Preview"
+                  fill
+                  className="object-cover"
                 />
-              </svg>
-            </div>
-          )}
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              isLoading={isUploading}
-            >
-              {imageUrl ? t('changeImage') : t('uploadImage')}
-            </Button>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {t('changeImage')}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-primary-500 transition-colors">
+                <svg
+                  className="w-10 h-10 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{t('uploadImage')}</span>
+                {isUploading && (
+                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
         </div>
       </div>
 
+      {/* Row 3: Categories (full width) */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('categories')}
@@ -192,46 +201,50 @@ export default function ShowcaseForm({
         </div>
       </div>
 
-      <Input
-        label={t('keywords')}
-        placeholder={t('keywordsPlaceholder')}
-        value={keywords}
-        onChange={(e) => setKeywords(e.target.value)}
-      />
+      {/* Row 4: Keywords and Visibility */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Input
+          label={t('keywords')}
+          placeholder={t('keywordsPlaceholder')}
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+        />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('visibility')}
-        </label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="visibility"
-              checked={isPublic}
-              onChange={() => setIsPublic(true)}
-              className="w-4 h-4 text-primary-600"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              {useTranslations('showcase')('public')}
-            </span>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('visibility')}
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="visibility"
-              checked={!isPublic}
-              onChange={() => setIsPublic(false)}
-              className="w-4 h-4 text-primary-600"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              {useTranslations('showcase')('private')}
-            </span>
-          </label>
+          <div className="flex gap-4 h-10 items-center">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="visibility"
+                checked={isPublic}
+                onChange={() => setIsPublic(true)}
+                className="w-4 h-4 text-primary-600"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {useTranslations('showcase')('public')}
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="visibility"
+                checked={!isPublic}
+                onChange={() => setIsPublic(false)}
+                className="w-4 h-4 text-primary-600"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {useTranslations('showcase')('private')}
+              </span>
+            </label>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3 pt-4">
+      {/* Actions */}
+      <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
         <Button type="submit" variant="primary" isLoading={isLoading}>
           {tCommon('save')}
         </Button>
