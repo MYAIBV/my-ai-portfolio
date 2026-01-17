@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import Button from '../ui/Button';
@@ -13,6 +13,9 @@ interface ShowcaseModalProps {
 
 export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
   const t = useTranslations('showcase');
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [objectPosition, setObjectPosition] = useState('center center');
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -29,6 +32,16 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
       document.body.style.overflow = '';
     };
   }, [item, onClose]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageContainerRef.current) return;
+
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setObjectPosition(`${x}% ${y}%`);
+  };
 
   if (!item) return null;
 
@@ -55,14 +68,24 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
           </svg>
         </button>
 
-        {/* Image - left side */}
-        <div className="relative w-full md:w-3/5 h-64 md:h-full bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+        {/* Image - left side with pan/zoom effect */}
+        <div
+          ref={imageContainerRef}
+          className="relative w-full md:w-3/5 h-64 md:h-full bg-slate-100 dark:bg-slate-800 flex-shrink-0 overflow-hidden"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onMouseMove={handleMouseMove}
+        >
           {item.image_url ? (
             <Image
               src={item.image_url}
               alt={item.title}
               fill
-              className="object-cover"
+              className="transition-[object-position] duration-100 ease-out"
+              style={{
+                objectFit: 'cover',
+                objectPosition: isHovering ? objectPosition : 'center center',
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
