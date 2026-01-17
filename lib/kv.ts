@@ -1,4 +1,6 @@
 import { ShowcaseItem, User } from './types';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import path from 'path';
 
 const SHOWCASE_KEY = 'showcase:items';
 const USERS_KEY = 'users';
@@ -19,28 +21,62 @@ async function getKV() {
   return kvClient;
 }
 
-// In-memory fallback for local development without KV
-const memoryStore: {
-  showcaseItems: Record<string, ShowcaseItem>;
-  users: Record<string, User>;
-} = {
-  showcaseItems: {},
-  users: {
-    // Default admin user for local development (password: admin123)
+// Local JSON file storage for development
+const DATA_DIR = path.join(process.cwd(), '.data');
+const SHOWCASE_FILE = path.join(DATA_DIR, 'showcase.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
+function ensureDataDir() {
+  if (!existsSync(DATA_DIR)) {
+    mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function readLocalShowcase(): Record<string, ShowcaseItem> {
+  try {
+    if (existsSync(SHOWCASE_FILE)) {
+      return JSON.parse(readFileSync(SHOWCASE_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading showcase file:', e);
+  }
+  return {};
+}
+
+function writeLocalShowcase(data: Record<string, ShowcaseItem>) {
+  ensureDataDir();
+  writeFileSync(SHOWCASE_FILE, JSON.stringify(data, null, 2));
+}
+
+function readLocalUsers(): Record<string, User> {
+  try {
+    if (existsSync(USERS_FILE)) {
+      return JSON.parse(readFileSync(USERS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading users file:', e);
+  }
+  // Default admin user for local development (password: admin123)
+  return {
     'info@my-ai.nl': {
       email: 'info@my-ai.nl',
-      passwordHash: '$2a$12$mGdtk3sg14L4e4fV8BX7PeD4L0acez3fizrM4hHLQt4ZL0q8ClLJC', // admin123
+      passwordHash: '$2a$12$mGdtk3sg14L4e4fV8BX7PeD4L0acez3fizrM4hHLQt4ZL0q8ClLJC',
       name: 'Admin',
       createdAt: new Date().toISOString(),
     },
-  },
-};
+  };
+}
+
+function writeLocalUsers(data: Record<string, User>) {
+  ensureDataDir();
+  writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+}
 
 // Showcase Items
 export async function getAllShowcaseItems(): Promise<ShowcaseItem[]> {
   const kv = await getKV();
   if (!kv) {
-    return Object.values(memoryStore.showcaseItems);
+    return Object.values(readLocalShowcase());
   }
 
   try {
@@ -61,7 +97,8 @@ export async function getPublicShowcaseItems(): Promise<ShowcaseItem[]> {
 export async function getShowcaseItem(id: string): Promise<ShowcaseItem | null> {
   const kv = await getKV();
   if (!kv) {
-    return memoryStore.showcaseItems[id] || null;
+    const items = readLocalShowcase();
+    return items[id] || null;
   }
 
   try {
@@ -76,7 +113,9 @@ export async function getShowcaseItem(id: string): Promise<ShowcaseItem | null> 
 export async function createShowcaseItem(item: ShowcaseItem): Promise<ShowcaseItem> {
   const kv = await getKV();
   if (!kv) {
-    memoryStore.showcaseItems[item.id] = item;
+    const items = readLocalShowcase();
+    items[item.id] = item;
+    writeLocalShowcase(items);
     return item;
   }
 
@@ -97,7 +136,9 @@ export async function updateShowcaseItem(id: string, updates: Partial<ShowcaseIt
 
   const kv = await getKV();
   if (!kv) {
-    memoryStore.showcaseItems[id] = updated;
+    const items = readLocalShowcase();
+    items[id] = updated;
+    writeLocalShowcase(items);
     return updated;
   }
 
@@ -108,8 +149,10 @@ export async function updateShowcaseItem(id: string, updates: Partial<ShowcaseIt
 export async function deleteShowcaseItem(id: string): Promise<boolean> {
   const kv = await getKV();
   if (!kv) {
-    if (memoryStore.showcaseItems[id]) {
-      delete memoryStore.showcaseItems[id];
+    const items = readLocalShowcase();
+    if (items[id]) {
+      delete items[id];
+      writeLocalShowcase(items);
       return true;
     }
     return false;
@@ -128,7 +171,8 @@ export async function deleteShowcaseItem(id: string): Promise<boolean> {
 export async function getUser(email: string): Promise<User | null> {
   const kv = await getKV();
   if (!kv) {
-    return memoryStore.users[email] || null;
+    const users = readLocalUsers();
+    return users[email] || null;
   }
 
   try {
@@ -143,7 +187,9 @@ export async function getUser(email: string): Promise<User | null> {
 export async function createUser(user: User): Promise<User> {
   const kv = await getKV();
   if (!kv) {
-    memoryStore.users[user.email] = user;
+    const users = readLocalUsers();
+    users[user.email] = user;
+    writeLocalUsers(users);
     return user;
   }
 
@@ -163,7 +209,9 @@ export async function updateUser(email: string, updates: Partial<User>): Promise
 
   const kv = await getKV();
   if (!kv) {
-    memoryStore.users[email] = updated;
+    const users = readLocalUsers();
+    users[email] = updated;
+    writeLocalUsers(users);
     return updated;
   }
 
@@ -174,8 +222,10 @@ export async function updateUser(email: string, updates: Partial<User>): Promise
 export async function deleteUser(email: string): Promise<boolean> {
   const kv = await getKV();
   if (!kv) {
-    if (memoryStore.users[email]) {
-      delete memoryStore.users[email];
+    const users = readLocalUsers();
+    if (users[email]) {
+      delete users[email];
+      writeLocalUsers(users);
       return true;
     }
     return false;
@@ -193,7 +243,7 @@ export async function deleteUser(email: string): Promise<boolean> {
 export async function getAllUsers(): Promise<User[]> {
   const kv = await getKV();
   if (!kv) {
-    return Object.values(memoryStore.users);
+    return Object.values(readLocalUsers());
   }
 
   try {

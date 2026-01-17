@@ -33,6 +33,9 @@ yarn-error.log*
 # local uploads
 /public/uploads
 
+# local data storage
+/.data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
