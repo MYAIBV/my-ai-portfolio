@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import SearchBar from '@/components/ui/SearchBar';
 import ShowcaseGrid from '@/components/showcase/ShowcaseGrid';
+import ShowcaseModal from '@/components/showcase/ShowcaseModal';
 import CategoryFilter from '@/components/showcase/CategoryFilter';
 import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
 
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
+  const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(null);
 
   useEffect(() => {
     async function fetchItems() {
@@ -75,7 +77,16 @@ export default function HomePage() {
         />
       </div>
 
-      <ShowcaseGrid items={filteredItems} isLoading={isLoading} />
+      <ShowcaseGrid
+        items={filteredItems}
+        isLoading={isLoading}
+        onSelect={setSelectedItem}
+      />
+
+      <ShowcaseModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+      />
     </div>
   );
 }

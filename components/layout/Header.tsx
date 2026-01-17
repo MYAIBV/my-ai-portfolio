@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function Header() {
   const t = useTranslations('nav');
   const locale = useLocale();
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { isAuthenticated, logout, isLoading } = useAuth();
 
   return (
     <header className="sticky top-0 z-40">
@@ -101,22 +101,16 @@ export default function Header() {
             {/* Vertical divider */}
             <div className="hidden md:block h-8 w-px bg-slate-200 dark:bg-slate-700" />
 
-            <nav className="hidden md:flex items-center space-x-10">
-              <Link
-                href={`/${locale}`}
-                className="text-[15px] font-medium text-slate-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {t('home')}
-              </Link>
-              {isAuthenticated && (
+            {isAuthenticated && (
+              <nav className="hidden md:flex items-center space-x-10">
                 <Link
                   href={`/${locale}/dashboard`}
                   className="text-[15px] font-medium text-slate-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   {t('dashboard')}
                 </Link>
-              )}
-            </nav>
+              </nav>
+            )}
           </div>
 
           <div className="flex items-center space-x-4 md:pl-4 md:border-l border-slate-200 dark:border-slate-700">
@@ -125,14 +119,9 @@ export default function Header() {
             {!isLoading && (
               <>
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-600 dark:text-slate-400 hidden sm:inline">
-                      {user?.name}
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={logout}>
-                      {t('logout')}
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="sm" onClick={logout}>
+                    {t('logout')}
+                  </Button>
                 ) : (
                   <Link href={`/${locale}/login`}>
                     <Button variant="primary" size="sm">

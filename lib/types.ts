@@ -1,6 +1,6 @@
-export type Category = 'voice' | 'whatsapp' | 'chat' | 'image' | 'video' | 'automation' | 'other';
+export type Category = 'voice' | 'chat' | 'image' | 'video' | 'automation' | 'other';
 
-export const CATEGORIES: Category[] = ['voice', 'whatsapp', 'chat', 'image', 'video', 'automation', 'other'];
+export const CATEGORIES: Category[] = ['voice', 'chat', 'image', 'video', 'automation', 'other'];
 
 export interface ShowcaseItem {
   id: string;

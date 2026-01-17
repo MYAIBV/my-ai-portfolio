@@ -20,14 +20,13 @@
     "tagline": "AI OP MAAT"
   },
   "home": {
-    "title": "AI Portfolio",
-    "subtitle": "Ontdek onze innovatieve AI-projecten",
+    "title": "AI Toepassingen",
+    "subtitle": "Ontdek onze innovatieve AI toepassingen",
     "allCategories": "Alle categorieën",
     "searchPlaceholder": "Zoek op titel, beschrijving of trefwoorden..."
   },
   "categories": {
     "voice": "Spraak",
-    "whatsapp": "WhatsApp",
     "chat": "Chat",
     "image": "Afbeelding",
     "video": "Video",

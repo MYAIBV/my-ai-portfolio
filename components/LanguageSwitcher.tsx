@@ -14,26 +14,30 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1 text-sm">
-      <button
-        onClick={() => switchLocale('nl')}
-        className={`px-2 py-1 rounded transition-colors ${
-          locale === 'nl'
-            ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
-        }`}
-      >
-        NL
-      </button>
+    <div className="flex items-center gap-1">
+      {/* Globe icon */}
+      <svg className="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+      </svg>
       <button
         onClick={() => switchLocale('en')}
-        className={`px-2 py-1 rounded transition-colors ${
+        className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
           locale === 'en'
-            ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
+            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
         }`}
       >
         EN
+      </button>
+      <button
+        onClick={() => switchLocale('nl')}
+        className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
+          locale === 'nl'
+            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
+        }`}
+      >
+        NL
       </button>
     </div>
   );

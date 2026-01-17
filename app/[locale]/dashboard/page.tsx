@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import SearchBar from '@/components/ui/SearchBar';
 import ShowcaseGrid from '@/components/showcase/ShowcaseGrid';
+import ShowcaseModal from '@/components/showcase/ShowcaseModal';
 import CategoryFilter from '@/components/showcase/CategoryFilter';
 import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
+  const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(null);
   const [deleteModal, setDeleteModal] = useState<ShowcaseItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -142,8 +144,14 @@ export default function DashboardPage() {
         items={filteredItems}
         isLoading={isLoading}
         showActions
+        onSelect={setSelectedItem}
         onEdit={handleEdit}
         onDelete={(item) => setDeleteModal(item)}
+      />
+
+      <ShowcaseModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
       />
 
       <Modal

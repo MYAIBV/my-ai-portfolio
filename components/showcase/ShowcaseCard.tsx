@@ -8,6 +8,7 @@ import { ShowcaseItem } from '@/lib/types';
 interface ShowcaseCardProps {
   item: ShowcaseItem;
   showActions?: boolean;
+  onClick?: (item: ShowcaseItem) => void;
   onEdit?: (item: ShowcaseItem) => void;
   onDelete?: (item: ShowcaseItem) => void;
 }
@@ -15,15 +16,18 @@ interface ShowcaseCardProps {
 export default function ShowcaseCard({
   item,
   showActions,
+  onClick,
   onEdit,
   onDelete,
 }: ShowcaseCardProps) {
   const t = useTranslations('showcase');
   const tCommon = useTranslations('common');
-  const tCategories = useTranslations('categories');
 
   return (
-    <div className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30">
+    <div
+      className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30"
+      onClick={() => onClick?.(item)}
+    >
       {/* Background Image */}
       <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700">
         {item.image_url ? (
@@ -67,60 +71,36 @@ export default function ShowcaseCard({
             {item.title}
           </h3>
 
-          {/* Description and details - revealed on hover */}
+          {/* Description - revealed on hover */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
           <p className="text-sm text-gray-200 mb-3 line-clamp-2">
             {item.description}
           </p>
 
-          <div className="flex flex-wrap gap-1 mb-3">
-            {item.categories.map((cat) => (
-              <span
-                key={cat}
-                className="px-2 py-0.5 text-xs font-medium bg-white/20 text-white rounded-full backdrop-blur-sm"
+          {showActions && (
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(item);
+                }}
               >
-                {tCategories(cat)}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <a
-              href={item.app_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button variant="primary" size="sm" className="w-full">
-                {t('viewProject')}
+                {tCommon('edit')}
               </Button>
-            </a>
-            {showActions && (
-              <>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit?.(item);
-                  }}
-                >
-                  {tCommon('edit')}
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete?.(item);
-                  }}
-                >
-                  {tCommon('delete')}
-                </Button>
-              </>
-            )}
-          </div>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(item);
+                }}
+              >
+                {tCommon('delete')}
+              </Button>
+            </div>
+          )}
         </div>
         </div>
       </div>

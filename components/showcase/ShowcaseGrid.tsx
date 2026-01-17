@@ -8,6 +8,7 @@ interface ShowcaseGridProps {
   items: ShowcaseItem[];
   isLoading?: boolean;
   showActions?: boolean;
+  onSelect?: (item: ShowcaseItem) => void;
   onEdit?: (item: ShowcaseItem) => void;
   onDelete?: (item: ShowcaseItem) => void;
 }
@@ -16,6 +17,7 @@ export default function ShowcaseGrid({
   items,
   isLoading,
   showActions,
+  onSelect,
   onEdit,
   onDelete,
 }: ShowcaseGridProps) {
@@ -49,6 +51,7 @@ export default function ShowcaseGrid({
           key={item.id}
           item={item}
           showActions={showActions}
+          onClick={onSelect}
           onEdit={onEdit}
           onDelete={onDelete}
         />

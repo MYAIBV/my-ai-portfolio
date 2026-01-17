@@ -20,14 +20,13 @@
     "tagline": "CUSTOM AI"
   },
   "home": {
-    "title": "AI Portfolio",
-    "subtitle": "Discover our innovative AI projects",
+    "title": "AI Applications",
+    "subtitle": "Discover our innovative AI applications",
     "allCategories": "All categories",
     "searchPlaceholder": "Search by title, description or keywords..."
   },
   "categories": {
     "voice": "Voice",
-    "whatsapp": "WhatsApp",
     "chat": "Chat",
     "image": "Image",
     "video": "Video",
