@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { ShowcaseItem } from '@/lib/types';
 
@@ -24,14 +23,15 @@ export default function ShowcaseCard({
   const tCategories = useTranslations('categories');
 
   return (
-    <Card variant="elevated" className="flex flex-col overflow-hidden group">
-      <div className="relative h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+    <div className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30">
+      {/* Background Image */}
+      <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700">
         {item.image_url ? (
           <Image
             src={item.image_url}
             alt={item.title}
             fill
-            className="object-cover transition-transform group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -50,63 +50,80 @@ export default function ShowcaseCard({
             </svg>
           </div>
         )}
-        {!item.is_public && (
-          <span className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full">
-            {t('private')}
-          </span>
-        )}
       </div>
 
-      <div className="flex-1 p-4 flex flex-col">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          {item.title}
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-          {item.description}
-        </p>
+      {/* Private badge */}
+      {!item.is_public && (
+        <span className="absolute top-3 right-3 z-10 px-2 py-1 text-xs font-medium bg-amber-100/90 text-amber-800 dark:bg-amber-900/90 dark:text-amber-200 rounded-full backdrop-blur-sm">
+          {t('private')}
+        </span>
+      )}
 
-        <div className="flex flex-wrap gap-1 mb-4">
-          {item.categories.map((cat) => (
-            <span
-              key={cat}
-              className="px-2 py-0.5 text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300 rounded-full"
+      {/* Content overlay - bottom only by default, expands on hover */}
+      <div className="absolute inset-x-0 bottom-0 bg-black/60 translate-y-[calc(100%-3.5rem)] group-hover:translate-y-0 transition-transform duration-300 ease-out">
+        <div className="p-4 flex flex-col">
+          {/* Title - always visible */}
+          <h3 className="text-lg font-semibold text-white mb-1">
+            {item.title}
+          </h3>
+
+          {/* Description and details - revealed on hover */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+          <p className="text-sm text-gray-200 mb-3 line-clamp-2">
+            {item.description}
+          </p>
+
+          <div className="flex flex-wrap gap-1 mb-3">
+            {item.categories.map((cat) => (
+              <span
+                key={cat}
+                className="px-2 py-0.5 text-xs font-medium bg-white/20 text-white rounded-full backdrop-blur-sm"
+              >
+                {tCategories(cat)}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <a
+              href={item.app_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1"
+              onClick={(e) => e.stopPropagation()}
             >
-              {tCategories(cat)}
-            </span>
-          ))}
+              <Button variant="primary" size="sm" className="w-full">
+                {t('viewProject')}
+              </Button>
+            </a>
+            {showActions && (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.(item);
+                  }}
+                >
+                  {tCommon('edit')}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.(item);
+                  }}
+                >
+                  {tCommon('delete')}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-
-        <div className="mt-auto flex gap-2">
-          <a
-            href={item.app_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1"
-          >
-            <Button variant="primary" size="sm" className="w-full">
-              {t('viewProject')}
-            </Button>
-          </a>
-          {showActions && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onEdit?.(item)}
-              >
-                {tCommon('edit')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => onDelete?.(item)}
-              >
-                {tCommon('delete')}
-              </Button>
-            </>
-          )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
