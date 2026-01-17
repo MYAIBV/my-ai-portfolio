@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 import { getCurrentUser } from '@/lib/auth';
-import { uploadImage } from '@/lib/cloudinary';
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if Blob storage is configured
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return NextResponse.json(
+        { error: 'Image storage not configured. Please set up Vercel Blob.' },
+        { status: 503 }
+      );
     }
 
     const formData = await request.formData();
@@ -33,14 +41,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Generate unique filename
+    const timestamp = Date.now();
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filename = `showcase/${timestamp}.${ext}`;
 
-    const result = await uploadImage(buffer, 'showcase');
+    // Upload to Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
 
     return NextResponse.json({
-      url: result.url,
-      publicId: result.publicId,
+      url: blob.url,
+      publicId: blob.pathname,
     });
   } catch (error) {
     console.error('Error uploading image:', error);
