@@ -13,7 +13,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata = {
-  title: 'My AI Portfolio',
+  title: 'MY AI | Portfolio',
   description: 'Discover innovative AI projects',
 };
 
@@ -30,6 +30,13 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* Google Fonts for SVG text elements */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className={`${plusJakartaSans.className} min-h-screen flex flex-col`}>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>

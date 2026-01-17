@@ -16,7 +16,8 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "tagline": "CUSTOM AI"
   },
   "home": {
     "title": "AI Portfolio",

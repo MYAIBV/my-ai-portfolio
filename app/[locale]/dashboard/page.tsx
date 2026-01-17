@@ -110,13 +110,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             {t('title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
             {t('subtitle')}
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         {t('allProjects')}: {filteredItems.length}
       </div>
 
@@ -151,7 +151,7 @@ export default function DashboardPage() {
         onClose={() => setDeleteModal(null)}
         title={tShowcase('deleteProject')}
       >
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-slate-600 dark:text-slate-400 mb-6">
           {tShowcase('deleteConfirm')}
         </p>
         <div className="flex gap-3 justify-end">
