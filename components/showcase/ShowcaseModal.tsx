@@ -2,17 +2,21 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Button from '../ui/Button';
 import { ShowcaseItem } from '@/lib/types';
 
 interface ShowcaseModalProps {
   item: ShowcaseItem | null;
   onClose: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
+export default function ShowcaseModal({ item, onClose, onEdit, onDelete }: ShowcaseModalProps) {
   const t = useTranslations('showcase');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const [objectPosition, setObjectPosition] = useState('center center');
   const [isHovering, setIsHovering] = useState(false);
@@ -124,22 +128,59 @@ export default function ShowcaseModal({ item, onClose }: ShowcaseModalProps) {
               {item.description}
             </p>
 
-            {/* Open app button */}
-            <div className="md:mt-auto pt-2 md:pt-6">
+            {/* Action buttons */}
+            <div className="md:mt-auto pt-2 md:pt-6 flex flex-wrap gap-3">
+              {item.app_url && (
+                <a
+                  href={item.app_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block"
+                >
+                  <Button variant="primary" size="md" className="md:text-lg md:px-8 md:py-4">
+                    {t('viewProject')}
+                    <svg className="w-4 h-4 md:w-5 md:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </Button>
+                </a>
+              )}
               <a
-                href={item.app_url}
+                href={`https://my-ai.nl/${locale}/contact`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block"
               >
-                <Button variant="primary" size="md" className="md:text-lg md:px-8 md:py-4">
-                  {t('viewProject')}
+                <Button variant="secondary" size="md" className="md:text-lg md:px-8 md:py-4">
+                  {t('contactUs')}
                   <svg className="w-4 h-4 md:w-5 md:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </Button>
               </a>
             </div>
+
+            {/* Admin actions - only shown when callbacks are provided */}
+            {(onEdit || onDelete) && (
+              <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+                {onEdit && (
+                  <Button variant="secondary" size="sm" onClick={onEdit}>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    {tCommon('edit')}
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button variant="danger" size="sm" onClick={onDelete}>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {tCommon('delete')}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

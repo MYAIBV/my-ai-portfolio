@@ -8,14 +8,23 @@ import ShowcaseModal from '@/components/showcase/ShowcaseModal';
 import CategoryFilter from '@/components/showcase/CategoryFilter';
 import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
 
-export default function HomePage() {
+interface ProjectPageClientProps {
+  item: ShowcaseItem;
+  locale: string;
+  baseUrl: string;
+}
+
+export default function ProjectPageClient({
+  item: initialItem,
+  locale,
+  baseUrl,
+}: ProjectPageClientProps) {
   const t = useTranslations('home');
-  const locale = useLocale();
   const [items, setItems] = useState<ShowcaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
-  const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ShowcaseItem | null>(initialItem);
 
   useEffect(() => {
     async function fetchItems() {
@@ -55,7 +64,6 @@ export default function HomePage() {
   // Handle browser back button
   useEffect(() => {
     const handlePopState = () => {
-      // If we're back on the homepage, close the modal
       if (!window.location.pathname.includes('/project/')) {
         setSelectedItem(null);
       }

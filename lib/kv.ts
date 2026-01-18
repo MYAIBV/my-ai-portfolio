@@ -110,6 +110,21 @@ export async function getShowcaseItem(id: string): Promise<ShowcaseItem | null> 
   }
 }
 
+export async function getShowcaseItemBySlug(slug: string): Promise<ShowcaseItem | null> {
+  const items = await getAllShowcaseItems();
+  return items.find((item) => item.slug === slug) || null;
+}
+
+export async function isSlugAvailable(
+  slug: string,
+  excludeId?: string
+): Promise<boolean> {
+  const items = await getAllShowcaseItems();
+  return !items.some(
+    (item) => item.slug === slug && item.id !== excludeId
+  );
+}
+
 export async function createShowcaseItem(item: ShowcaseItem): Promise<ShowcaseItem> {
   const kv = await getKV();
   if (!kv) {

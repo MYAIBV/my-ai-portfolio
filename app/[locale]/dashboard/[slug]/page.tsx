@@ -15,7 +15,11 @@ import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { generateSlug } from '@/lib/slug';
 
-export default function DashboardPage() {
+interface DashboardSlugPageProps {
+  params: { slug: string };
+}
+
+export default function DashboardSlugPage({ params }: DashboardSlugPageProps) {
   const t = useTranslations('dashboard');
   const tCommon = useTranslations('common');
   const tShowcase = useTranslations('showcase');
@@ -37,6 +41,25 @@ export default function DashboardPage() {
       router.push(`/${locale}/login`);
     }
   }, [authLoading, isAuthenticated, router, locale]);
+
+  // Fetch initial item by slug
+  useEffect(() => {
+    async function fetchInitialItem() {
+      try {
+        const res = await fetch(`/api/showcase/by-slug/${params.slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSelectedItem(data.item);
+        }
+      } catch (error) {
+        console.error('Error fetching item by slug:', error);
+      }
+    }
+
+    if (isAuthenticated && params.slug) {
+      fetchInitialItem();
+    }
+  }, [isAuthenticated, params.slug]);
 
   useEffect(() => {
     async function fetchItems() {
@@ -122,18 +145,6 @@ export default function DashboardPage() {
     router.push(`/${locale}/dashboard/${slug}/edit`);
   }, [locale, router, getItemSlug]);
 
-  const handleModalEdit = useCallback(() => {
-    if (selectedItem) {
-      handleEdit(selectedItem);
-    }
-  }, [selectedItem, handleEdit]);
-
-  const handleModalDelete = useCallback(() => {
-    if (selectedItem) {
-      setDeleteModal(selectedItem);
-    }
-  }, [selectedItem]);
-
   const handleDelete = async () => {
     if (!deleteModal) return;
 
@@ -145,11 +156,10 @@ export default function DashboardPage() {
 
       if (res.ok) {
         setItems((prev) => prev.filter((item) => item.id !== deleteModal.id));
-        // Close modal if the deleted item was selected
+        setDeleteModal(null);
         if (selectedItem?.id === deleteModal.id) {
           handleCloseModal();
         }
-        setDeleteModal(null);
       }
     } catch (error) {
       console.error('Error deleting item:', error);
@@ -157,6 +167,18 @@ export default function DashboardPage() {
       setIsDeleting(false);
     }
   };
+
+  const handleModalEdit = useCallback(() => {
+    if (selectedItem) {
+      handleEdit(selectedItem);
+    }
+  }, [selectedItem, handleEdit]);
+
+  const handleModalDelete = useCallback(() => {
+    if (selectedItem) {
+      setDeleteModal(selectedItem);
+    }
+  }, [selectedItem]);
 
   if (authLoading) {
     return (

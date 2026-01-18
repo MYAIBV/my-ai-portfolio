@@ -4,7 +4,9 @@ import {
   getShowcaseItem,
   updateShowcaseItem,
   deleteShowcaseItem,
+  isSlugAvailable,
 } from '@/lib/kv';
+import { validateSlug } from '@/lib/slug';
 
 export async function GET(
   request: NextRequest,
@@ -54,7 +56,26 @@ export async function PUT(
       categories,
       keywords,
       is_public,
+      slug,
     } = body;
+
+    // Validate slug if provided
+    if (slug !== undefined) {
+      if (!validateSlug(slug)) {
+        return NextResponse.json(
+          { error: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens.' },
+          { status: 400 }
+        );
+      }
+
+      const slugAvailable = await isSlugAvailable(slug, params.id);
+      if (!slugAvailable) {
+        return NextResponse.json(
+          { error: 'This slug is already taken' },
+          { status: 400 }
+        );
+      }
+    }
 
     const item = await updateShowcaseItem(params.id, {
       title,
@@ -64,6 +85,7 @@ export async function PUT(
       categories,
       keywords,
       is_public,
+      slug,
     });
 
     if (!item) {

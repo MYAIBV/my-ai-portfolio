@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ShowcaseItem } from '@/lib/types';
 
 interface EditShowcasePageProps {
-  params: { id: string };
+  params: { slug: string };
 }
 
 export default function EditShowcasePage({ params }: EditShowcasePageProps) {
@@ -31,12 +31,20 @@ export default function EditShowcasePage({ params }: EditShowcasePageProps) {
   useEffect(() => {
     async function fetchItem() {
       try {
-        const res = await fetch(`/api/showcase/${params.id}`);
+        // First try to fetch by slug
+        const res = await fetch(`/api/showcase/by-slug/${params.slug}`);
         if (res.ok) {
           const data = await res.json();
           setItem(data.item);
         } else {
-          router.push(`/${locale}/dashboard`);
+          // If not found by slug, the slug might be an ID (for backward compatibility)
+          const idRes = await fetch(`/api/showcase/${params.slug}`);
+          if (idRes.ok) {
+            const data = await idRes.json();
+            setItem(data.item);
+          } else {
+            router.push(`/${locale}/dashboard`);
+          }
         }
       } catch (error) {
         console.error('Error fetching item:', error);
@@ -49,19 +57,27 @@ export default function EditShowcasePage({ params }: EditShowcasePageProps) {
     if (isAuthenticated) {
       fetchItem();
     }
-  }, [isAuthenticated, params.id, router, locale]);
+  }, [isAuthenticated, params.slug, router, locale]);
 
   const handleSubmit = async (data: Parameters<typeof ShowcaseForm>[0]['onSubmit'] extends (data: infer D) => unknown ? D : never) => {
+    if (!item) return;
+
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/showcase/${params.id}`, {
+      const res = await fetch(`/api/showcase/${item.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (res.ok) {
-        router.push(`/${locale}/dashboard`);
+        const updatedData = await res.json();
+        // Redirect to dashboard, or if slug changed, update URL
+        if (updatedData.item.slug !== params.slug) {
+          router.push(`/${locale}/dashboard`);
+        } else {
+          router.push(`/${locale}/dashboard`);
+        }
       }
     } catch (error) {
       console.error('Error updating item:', error);

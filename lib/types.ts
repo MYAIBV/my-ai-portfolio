@@ -5,6 +5,7 @@ export const CATEGORIES: Category[] = ['voice', 'chat', 'image', 'video', 'autom
 export interface ShowcaseItem {
   id: string;
   title: string;
+  slug: string;
   description: string;
   image_url: string;
   app_url: string;

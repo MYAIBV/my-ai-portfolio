@@ -1,13 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
 import Button from '../ui/Button';
 import { ShowcaseItem } from '@/lib/types';
 
 interface ShowcaseCardProps {
   item: ShowcaseItem;
   showActions?: boolean;
+  linkToProject?: boolean;
   onClick?: (item: ShowcaseItem) => void;
   onEdit?: (item: ShowcaseItem) => void;
   onDelete?: (item: ShowcaseItem) => void;
@@ -16,18 +18,17 @@ interface ShowcaseCardProps {
 export default function ShowcaseCard({
   item,
   showActions,
+  linkToProject,
   onClick,
   onEdit,
   onDelete,
 }: ShowcaseCardProps) {
   const t = useTranslations('showcase');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
 
-  return (
-    <div
-      className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30"
-      onClick={() => onClick?.(item)}
-    >
+  const cardContent = (
+    <>
       {/* Background Image */}
       <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700">
         {item.image_url ? (
@@ -73,37 +74,60 @@ export default function ShowcaseCard({
 
           {/* Description - revealed on hover */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-          <p className="text-sm text-gray-200 mb-3 line-clamp-2">
-            {item.description}
-          </p>
+            <p className="text-sm text-gray-200 mb-3 line-clamp-2">
+              {item.description}
+            </p>
 
-          {showActions && (
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.(item);
-                }}
-              >
-                {tCommon('edit')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.(item);
-                }}
-              >
-                {tCommon('delete')}
-              </Button>
-            </div>
-          )}
-        </div>
+            {showActions && (
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onEdit?.(item);
+                  }}
+                >
+                  {tCommon('edit')}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onDelete?.(item);
+                  }}
+                >
+                  {tCommon('delete')}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    </>
+  );
+
+  // Use Link for SEO when linkToProject is true and item has a slug
+  if (linkToProject && item.slug && item.is_public) {
+    return (
+      <Link
+        href={`/${locale}/project/${item.slug}`}
+        className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30 block"
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30"
+      onClick={() => onClick?.(item)}
+    >
+      {cardContent}
     </div>
   );
 }

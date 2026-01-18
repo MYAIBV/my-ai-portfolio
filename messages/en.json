@@ -35,6 +35,7 @@
   },
   "showcase": {
     "viewProject": "View project",
+    "contactUs": "Discuss possibilities",
     "private": "Private",
     "public": "Public",
     "addNew": "Add new project",
@@ -44,6 +45,11 @@
     "form": {
       "title": "Title",
       "titlePlaceholder": "Project title",
+      "slug": "URL Slug",
+      "slugPlaceholder": "project-name",
+      "slugHelp": "URL-friendly name for SEO",
+      "slugTaken": "This slug is already taken",
+      "slugInvalid": "Only lowercase letters, numbers, and hyphens allowed",
       "description": "Description",
       "descriptionPlaceholder": "Describe the project...",
       "appUrl": "App URL",

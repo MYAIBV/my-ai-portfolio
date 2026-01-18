@@ -35,6 +35,7 @@
   },
   "showcase": {
     "viewProject": "Bekijk project",
+    "contactUs": "Bespreek de mogelijkheden",
     "private": "Privé",
     "public": "Openbaar",
     "addNew": "Nieuw project toevoegen",
@@ -44,6 +45,11 @@
     "form": {
       "title": "Titel",
       "titlePlaceholder": "Project titel",
+      "slug": "URL Slug",
+      "slugPlaceholder": "project-naam",
+      "slugHelp": "URL-vriendelijke naam voor SEO",
+      "slugTaken": "Deze slug is al in gebruik",
+      "slugInvalid": "Alleen kleine letters, cijfers en koppeltekens toegestaan",
       "description": "Beschrijving",
       "descriptionPlaceholder": "Beschrijf het project...",
       "appUrl": "App URL",

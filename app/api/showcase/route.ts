@@ -5,8 +5,10 @@ import {
   getAllShowcaseItems,
   getPublicShowcaseItems,
   createShowcaseItem,
+  isSlugAvailable,
 } from '@/lib/kv';
 import { ShowcaseItem } from '@/lib/types';
+import { generateSlug, validateSlug } from '@/lib/slug';
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
       categories,
       keywords,
       is_public,
+      slug: providedSlug,
     } = body;
 
     if (!title || !description || !app_url) {
@@ -57,10 +60,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate or validate slug
+    let slug = providedSlug || generateSlug(title);
+
+    if (!validateSlug(slug)) {
+      return NextResponse.json(
+        { error: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens.' },
+        { status: 400 }
+      );
+    }
+
+    const slugAvailable = await isSlugAvailable(slug);
+    if (!slugAvailable) {
+      return NextResponse.json(
+        { error: 'This slug is already taken' },
+        { status: 400 }
+      );
+    }
+
     const now = new Date().toISOString();
     const item: ShowcaseItem = {
       id: uuid(),
       title,
+      slug,
       description,
       image_url: image_url || '',
       app_url,

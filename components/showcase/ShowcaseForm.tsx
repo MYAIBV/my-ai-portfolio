@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
+import { generateSlug, validateSlug } from '@/lib/slug';
 
 interface ShowcaseFormProps {
   initialData?: Partial<ShowcaseItem>;
@@ -24,6 +25,10 @@ export default function ShowcaseForm({
   const tCommon = useTranslations('common');
 
   const [title, setTitle] = useState(initialData?.title || '');
+  const [slug, setSlug] = useState(initialData?.slug || '');
+  const [slugTouched, setSlugTouched] = useState(!!initialData?.slug);
+  const [slugError, setSlugError] = useState('');
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [description, setDescription] = useState(initialData?.description || '');
   const [appUrl, setAppUrl] = useState(initialData?.app_url || '');
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || '');
@@ -35,6 +40,59 @@ export default function ShowcaseForm({
   );
   const [isPublic, setIsPublic] = useState(initialData?.is_public ?? true);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Auto-generate slug when title changes (if slug hasn't been manually edited)
+  useEffect(() => {
+    if (!slugTouched && title) {
+      const generatedSlug = generateSlug(title);
+      setSlug(generatedSlug);
+    }
+  }, [title, slugTouched]);
+
+  // Validate slug and check uniqueness
+  useEffect(() => {
+    if (!slug) {
+      setSlugError('');
+      return;
+    }
+
+    if (!validateSlug(slug)) {
+      setSlugError(t('slugInvalid'));
+      return;
+    }
+
+    // Debounce uniqueness check
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      try {
+        const res = await fetch(`/api/showcase/by-slug/${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          // If we're editing and it's the same item, no conflict
+          if (initialData?.id && data.item?.id === initialData.id) {
+            setSlugError('');
+          } else {
+            setSlugError(t('slugTaken'));
+          }
+        } else {
+          setSlugError('');
+        }
+      } catch {
+        setSlugError('');
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [slug, initialData?.id, t]);
+
+  const handleSlugChange = (value: string) => {
+    // Normalize input: lowercase, replace spaces with hyphens
+    const normalized = value.toLowerCase().replace(/\s+/g, '-');
+    setSlug(normalized);
+    setSlugTouched(true);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +139,7 @@ export default function ShowcaseForm({
 
     await onSubmit({
       title,
+      slug,
       description,
       image_url: imageUrl,
       app_url: appUrl,
@@ -92,7 +151,7 @@ export default function ShowcaseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Row 1: Title and App URL */}
+      {/* Row 1: Title and Slug */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label={t('title')}
@@ -101,6 +160,34 @@ export default function ShowcaseForm({
           onChange={(e) => setTitle(e.target.value)}
           required
         />
+        <div>
+          <Input
+            label={t('slug')}
+            placeholder={t('slugPlaceholder')}
+            value={slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            required
+          />
+          {slugError && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {slugError}
+            </p>
+          )}
+          {!slugError && slug && (
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t('slugHelp')}: /project/{slug}
+            </p>
+          )}
+          {isCheckingSlug && (
+            <p className="mt-1 text-sm text-gray-400">
+              {tCommon('loading')}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Row 2: App URL (full width on mobile, half on desktop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label={t('appUrl')}
           type="url"
@@ -109,9 +196,10 @@ export default function ShowcaseForm({
           onChange={(e) => setAppUrl(e.target.value)}
           required
         />
+        <div className="hidden md:block" /> {/* Spacer */}
       </div>
 
-      {/* Row 2: Description and Image */}
+      {/* Row 3: Description and Image */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Textarea
           label={t('description')}
@@ -178,7 +266,7 @@ export default function ShowcaseForm({
         </div>
       </div>
 
-      {/* Row 3: Categories (full width) */}
+      {/* Row 4: Categories (full width) */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('categories')}
@@ -201,7 +289,7 @@ export default function ShowcaseForm({
         </div>
       </div>
 
-      {/* Row 4: Keywords and Visibility */}
+      {/* Row 5: Keywords and Visibility */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label={t('keywords')}
