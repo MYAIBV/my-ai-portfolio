@@ -60,7 +60,13 @@
       "visibility": "Zichtbaarheid",
       "image": "Afbeelding",
       "uploadImage": "Afbeelding uploaden",
-      "changeImage": "Afbeelding wijzigen"
+      "changeImage": "Afbeelding wijzigen",
+      "aiSuggest": "AI Suggestie",
+      "translate": "Vertalen",
+      "translateFrom": "Vertalen van {lang}",
+      "languageStatus": "Taalstatus",
+      "complete": "Compleet",
+      "incomplete": "Incompleet"
     }
   },
   "auth": {

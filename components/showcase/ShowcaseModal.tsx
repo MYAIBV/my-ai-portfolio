@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import Button from '../ui/Button';
-import { ShowcaseItem } from '@/lib/types';
+import { ShowcaseItem, SupportedLocale, getLocalizedContent } from '@/lib/types';
 
 interface ShowcaseModalProps {
   item: ShowcaseItem | null;
@@ -16,10 +16,17 @@ interface ShowcaseModalProps {
 export default function ShowcaseModal({ item, onClose, onEdit, onDelete }: ShowcaseModalProps) {
   const t = useTranslations('showcase');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
+  const locale = useLocale() as SupportedLocale;
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const [objectPosition, setObjectPosition] = useState('center center');
   const [isHovering, setIsHovering] = useState(false);
+
+  // Get localized content (with fallback for backward compatibility)
+  const localizedContent = item && item.title_nl && item.title_en
+    ? getLocalizedContent(item, locale)
+    : item
+      ? { title: item.title, slug: item.slug, description: item.description }
+      : { title: '', slug: '', description: '' };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -83,7 +90,7 @@ export default function ShowcaseModal({ item, onClose, onEdit, onDelete }: Showc
           {item.image_url ? (
             <Image
               src={item.image_url}
-              alt={item.title}
+              alt={localizedContent.title}
               fill
               className="transition-[object-position] duration-100 ease-out"
               style={{
@@ -121,11 +128,11 @@ export default function ShowcaseModal({ item, onClose, onEdit, onDelete }: Showc
         <div className="w-full md:w-2/5 md:h-full p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
           <div className="flex flex-col md:justify-center md:min-h-full">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-2 md:mb-6">
-              {item.title}
+              {localizedContent.title}
             </h2>
 
             <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed mb-4 md:mb-8">
-              {item.description}
+              {localizedContent.description}
             </p>
 
             {/* Action buttons */}

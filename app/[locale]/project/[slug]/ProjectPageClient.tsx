@@ -6,7 +6,7 @@ import SearchBar from '@/components/ui/SearchBar';
 import ShowcaseGrid from '@/components/showcase/ShowcaseGrid';
 import ShowcaseModal from '@/components/showcase/ShowcaseModal';
 import CategoryFilter from '@/components/showcase/CategoryFilter';
-import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
+import { ShowcaseItem, Category, CATEGORIES, SupportedLocale, getLocalizedContent } from '@/lib/types';
 
 interface ProjectPageClientProps {
   item: ShowcaseItem;
@@ -46,11 +46,17 @@ export default function ProjectPageClient({
   // Handle selecting an item - update URL to project slug
   const handleSelectItem = useCallback((item: ShowcaseItem) => {
     setSelectedItem(item);
-    if (item.slug) {
+    // Use locale-specific slug if available
+    const localizedContent = item.title_nl && item.title_en
+      ? getLocalizedContent(item, locale as SupportedLocale)
+      : { slug: item.slug };
+    const slug = localizedContent.slug || item.slug;
+
+    if (slug) {
       window.history.pushState(
-        { modal: true, slug: item.slug },
+        { modal: true, slug },
         '',
-        `/${locale}/project/${item.slug}`
+        `/${locale}/project/${slug}`
       );
     }
   }, [locale]);
@@ -82,16 +88,22 @@ export default function ProjectPageClient({
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query) ||
+      result = result.filter((item) => {
+        // Get localized content for searching
+        const localizedContent = item.title_nl && item.title_en
+          ? getLocalizedContent(item, locale as SupportedLocale)
+          : { title: item.title, description: item.description };
+
+        return (
+          localizedContent.title.toLowerCase().includes(query) ||
+          localizedContent.description.toLowerCase().includes(query) ||
           item.keywords.some((k) => k.toLowerCase().includes(query))
-      );
+        );
+      });
     }
 
     return result;
-  }, [items, selectedCategory, searchQuery]);
+  }, [items, selectedCategory, searchQuery, locale]);
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12">

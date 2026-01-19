@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
-import { ShowcaseItem, Category, CATEGORIES } from '@/lib/types';
+import { ShowcaseItem, Category, CATEGORIES, SupportedLocale } from '@/lib/types';
 import { generateSlug, validateSlug } from '@/lib/slug';
 
 interface ShowcaseFormProps {
@@ -14,6 +14,13 @@ interface ShowcaseFormProps {
   onSubmit: (data: Omit<ShowcaseItem, 'id' | 'created_by' | 'created_at' | 'updated_at'>) => Promise<void>;
   isLoading?: boolean;
 }
+
+type Language = 'nl' | 'en';
+
+const LANGUAGES: { code: Language; label: string }[] = [
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'en', label: 'English' },
+];
 
 export default function ShowcaseForm({
   initialData,
@@ -24,12 +31,40 @@ export default function ShowcaseForm({
   const tCategories = useTranslations('categories');
   const tCommon = useTranslations('common');
 
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [slug, setSlug] = useState(initialData?.slug || '');
-  const [slugTouched, setSlugTouched] = useState(!!initialData?.slug);
-  const [slugError, setSlugError] = useState('');
-  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
-  const [description, setDescription] = useState(initialData?.description || '');
+  // Current language tab
+  const [activeLanguage, setActiveLanguage] = useState<Language>('nl');
+
+  // Multilingual content state
+  const [titles, setTitles] = useState<Record<Language, string>>({
+    nl: initialData?.title_nl || initialData?.title || '',
+    en: initialData?.title_en || initialData?.title || '',
+  });
+  const [slugs, setSlugs] = useState<Record<Language, string>>({
+    nl: initialData?.slug_nl || initialData?.slug || '',
+    en: initialData?.slug_en || initialData?.slug || '',
+  });
+  const [slugsTouched, setSlugsTouched] = useState<Record<Language, boolean>>({
+    nl: !!(initialData?.slug_nl || initialData?.slug),
+    en: !!(initialData?.slug_en || initialData?.slug),
+  });
+  const [slugErrors, setSlugErrors] = useState<Record<Language, string>>({
+    nl: '',
+    en: '',
+  });
+  const [isCheckingSlug, setIsCheckingSlug] = useState<Record<Language, boolean>>({
+    nl: false,
+    en: false,
+  });
+  const [descriptions, setDescriptions] = useState<Record<Language, string>>({
+    nl: initialData?.description_nl || initialData?.description || '',
+    en: initialData?.description_en || initialData?.description || '',
+  });
+
+  // AI loading states
+  const [isTranslating, setIsTranslating] = useState<Record<string, boolean>>({});
+  const [isSuggesting, setIsSuggesting] = useState<Record<string, boolean>>({});
+
+  // Other fields
   const [appUrl, setAppUrl] = useState(initialData?.app_url || '');
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || '');
   const [categories, setCategories] = useState<Category[]>(
@@ -43,55 +78,60 @@ export default function ShowcaseForm({
 
   // Auto-generate slug when title changes (if slug hasn't been manually edited)
   useEffect(() => {
-    if (!slugTouched && title) {
-      const generatedSlug = generateSlug(title);
-      setSlug(generatedSlug);
-    }
-  }, [title, slugTouched]);
+    LANGUAGES.forEach(({ code }) => {
+      if (!slugsTouched[code] && titles[code]) {
+        const generatedSlug = generateSlug(titles[code]);
+        setSlugs(prev => ({ ...prev, [code]: generatedSlug }));
+      }
+    });
+  }, [titles, slugsTouched]);
 
   // Validate slug and check uniqueness
   useEffect(() => {
+    const lang = activeLanguage;
+    const slug = slugs[lang];
+
     if (!slug) {
-      setSlugError('');
+      setSlugErrors(prev => ({ ...prev, [lang]: '' }));
       return;
     }
 
     if (!validateSlug(slug)) {
-      setSlugError(t('slugInvalid'));
+      setSlugErrors(prev => ({ ...prev, [lang]: t('slugInvalid') }));
       return;
     }
 
     // Debounce uniqueness check
     const timeoutId = setTimeout(async () => {
-      setIsCheckingSlug(true);
+      setIsCheckingSlug(prev => ({ ...prev, [lang]: true }));
       try {
-        const res = await fetch(`/api/showcase/by-slug/${slug}`);
+        const res = await fetch(`/api/showcase/by-slug/${slug}?locale=${lang}`);
         if (res.ok) {
           const data = await res.json();
           // If we're editing and it's the same item, no conflict
           if (initialData?.id && data.item?.id === initialData.id) {
-            setSlugError('');
+            setSlugErrors(prev => ({ ...prev, [lang]: '' }));
           } else {
-            setSlugError(t('slugTaken'));
+            setSlugErrors(prev => ({ ...prev, [lang]: t('slugTaken') }));
           }
         } else {
-          setSlugError('');
+          setSlugErrors(prev => ({ ...prev, [lang]: '' }));
         }
       } catch {
-        setSlugError('');
+        setSlugErrors(prev => ({ ...prev, [lang]: '' }));
       } finally {
-        setIsCheckingSlug(false);
+        setIsCheckingSlug(prev => ({ ...prev, [lang]: false }));
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [slug, initialData?.id, t]);
+  }, [slugs, activeLanguage, initialData?.id, t]);
 
-  const handleSlugChange = (value: string) => {
+  const handleSlugChange = (lang: Language, value: string) => {
     // Normalize input: lowercase, replace spaces with hyphens
     const normalized = value.toLowerCase().replace(/\s+/g, '-');
-    setSlug(normalized);
-    setSlugTouched(true);
+    setSlugs(prev => ({ ...prev, [lang]: normalized }));
+    setSlugsTouched(prev => ({ ...prev, [lang]: true }));
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +169,92 @@ export default function ShowcaseForm({
     }
   };
 
+  // AI: Translate content from one language to another
+  const handleTranslate = async (field: 'title' | 'description', fromLang: Language) => {
+    const toLang: Language = fromLang === 'nl' ? 'en' : 'nl';
+    const key = `${field}_${fromLang}_${toLang}`;
+
+    const text = field === 'title' ? titles[fromLang] : descriptions[fromLang];
+    if (!text.trim()) return;
+
+    setIsTranslating(prev => ({ ...prev, [key]: true }));
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'translate',
+          text,
+          fromLang,
+          toLang,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (field === 'title') {
+          setTitles(prev => ({ ...prev, [toLang]: data.result }));
+          // Also generate slug for the translated title if not touched
+          if (!slugsTouched[toLang]) {
+            setSlugs(prev => ({ ...prev, [toLang]: generateSlug(data.result) }));
+          }
+        } else {
+          setDescriptions(prev => ({ ...prev, [toLang]: data.result }));
+        }
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setIsTranslating(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  // AI: Suggest content
+  const handleSuggest = async (field: 'title' | 'description', lang: Language) => {
+    const key = `${field}_${lang}`;
+
+    setIsSuggesting(prev => ({ ...prev, [key]: true }));
+    try {
+      const keywordList = keywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0);
+
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'suggest',
+          field,
+          language: lang,
+          context: {
+            existingTitle: titles[lang],
+            existingDescription: descriptions[lang],
+            categories: categories.map(c => tCategories(c)),
+            keywords: keywordList,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (field === 'title') {
+          setTitles(prev => ({ ...prev, [lang]: data.result }));
+          // Also generate slug for the suggested title if not touched
+          if (!slugsTouched[lang]) {
+            setSlugs(prev => ({ ...prev, [lang]: generateSlug(data.result) }));
+          }
+        } else {
+          setDescriptions(prev => ({ ...prev, [lang]: data.result }));
+        }
+      }
+    } catch (error) {
+      console.error('Suggestion error:', error);
+    } finally {
+      setIsSuggesting(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -138,9 +264,15 @@ export default function ShowcaseForm({
       .filter((k) => k.length > 0);
 
     await onSubmit({
-      title,
-      slug,
-      description,
+      title: titles.nl, // Default to Dutch
+      slug: slugs.nl,
+      description: descriptions.nl,
+      title_nl: titles.nl,
+      title_en: titles.en,
+      slug_nl: slugs.nl,
+      slug_en: slugs.en,
+      description_nl: descriptions.nl,
+      description_en: descriptions.en,
       image_url: imageUrl,
       app_url: appUrl,
       categories,
@@ -149,36 +281,95 @@ export default function ShowcaseForm({
     });
   };
 
+  const otherLang: Language = activeLanguage === 'nl' ? 'en' : 'nl';
+  const hasOtherLangContent = (field: 'title' | 'description') => {
+    return field === 'title' ? titles[otherLang].trim() : descriptions[otherLang].trim();
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Language Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex gap-4">
+          {LANGUAGES.map(({ code, label }) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => setActiveLanguage(code)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeLanguage === code
+                  ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              {label}
+              {/* Show indicator if content exists */}
+              {(titles[code] || descriptions[code]) && (
+                <span className="ml-2 w-2 h-2 bg-green-500 rounded-full inline-block" />
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
+
       {/* Row 1: Title and Slug */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label={t('title')}
-          placeholder={t('titlePlaceholder')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('title')} ({activeLanguage.toUpperCase()})
+            </label>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => handleSuggest('title', activeLanguage)}
+                disabled={isSuggesting[`title_${activeLanguage}`]}
+                className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50"
+                title={t('aiSuggest')}
+              >
+                {isSuggesting[`title_${activeLanguage}`] ? '...' : t('aiSuggest')}
+              </button>
+              {hasOtherLangContent('title') && (
+                <button
+                  type="button"
+                  onClick={() => handleTranslate('title', otherLang)}
+                  disabled={isTranslating[`title_${otherLang}_${activeLanguage}`]}
+                  className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50"
+                  title={t('translateFrom', { lang: otherLang.toUpperCase() })}
+                >
+                  {isTranslating[`title_${otherLang}_${activeLanguage}`] ? '...' : t('translate')}
+                </button>
+              )}
+            </div>
+          </div>
           <Input
-            label={t('slug')}
-            placeholder={t('slugPlaceholder')}
-            value={slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder={t('titlePlaceholder')}
+            value={titles[activeLanguage]}
+            onChange={(e) => setTitles(prev => ({ ...prev, [activeLanguage]: e.target.value }))}
             required
           />
-          {slugError && (
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('slug')} ({activeLanguage.toUpperCase()})
+          </label>
+          <Input
+            placeholder={t('slugPlaceholder')}
+            value={slugs[activeLanguage]}
+            onChange={(e) => handleSlugChange(activeLanguage, e.target.value)}
+            required
+          />
+          {slugErrors[activeLanguage] && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {slugError}
+              {slugErrors[activeLanguage]}
             </p>
           )}
-          {!slugError && slug && (
+          {!slugErrors[activeLanguage] && slugs[activeLanguage] && (
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {t('slugHelp')}: /project/{slug}
+              {t('slugHelp')}: /{activeLanguage}/project/{slugs[activeLanguage]}
             </p>
           )}
-          {isCheckingSlug && (
+          {isCheckingSlug[activeLanguage] && (
             <p className="mt-1 text-sm text-gray-400">
               {tCommon('loading')}
             </p>
@@ -186,7 +377,7 @@ export default function ShowcaseForm({
         </div>
       </div>
 
-      {/* Row 2: App URL (full width on mobile, half on desktop) */}
+      {/* Row 2: App URL */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label={t('appUrl')}
@@ -196,19 +387,47 @@ export default function ShowcaseForm({
           onChange={(e) => setAppUrl(e.target.value)}
           required
         />
-        <div className="hidden md:block" /> {/* Spacer */}
+        <div className="hidden md:block" />
       </div>
 
       {/* Row 3: Description and Image */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Textarea
-          label={t('description')}
-          placeholder={t('descriptionPlaceholder')}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          rows={6}
-        />
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('description')} ({activeLanguage.toUpperCase()})
+            </label>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => handleSuggest('description', activeLanguage)}
+                disabled={isSuggesting[`description_${activeLanguage}`]}
+                className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50"
+                title={t('aiSuggest')}
+              >
+                {isSuggesting[`description_${activeLanguage}`] ? '...' : t('aiSuggest')}
+              </button>
+              {hasOtherLangContent('description') && (
+                <button
+                  type="button"
+                  onClick={() => handleTranslate('description', otherLang)}
+                  disabled={isTranslating[`description_${otherLang}_${activeLanguage}`]}
+                  className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50"
+                  title={t('translateFrom', { lang: otherLang.toUpperCase() })}
+                >
+                  {isTranslating[`description_${otherLang}_${activeLanguage}`] ? '...' : t('translate')}
+                </button>
+              )}
+            </div>
+          </div>
+          <Textarea
+            placeholder={t('descriptionPlaceholder')}
+            value={descriptions[activeLanguage]}
+            onChange={(e) => setDescriptions(prev => ({ ...prev, [activeLanguage]: e.target.value }))}
+            required
+            rows={6}
+          />
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -266,7 +485,7 @@ export default function ShowcaseForm({
         </div>
       </div>
 
-      {/* Row 4: Categories (full width) */}
+      {/* Row 4: Categories */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('categories')}
@@ -331,9 +550,38 @@ export default function ShowcaseForm({
         </div>
       </div>
 
+      {/* Language completion indicator */}
+      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t('languageStatus')}
+        </p>
+        <div className="flex gap-4">
+          {LANGUAGES.map(({ code, label }) => {
+            const isComplete = titles[code] && descriptions[code] && slugs[code];
+            return (
+              <div key={code} className="flex items-center gap-2">
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    isComplete ? 'bg-green-500' : 'bg-yellow-500'
+                  }`}
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {label}: {isComplete ? t('complete') : t('incomplete')}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <Button type="submit" variant="primary" isLoading={isLoading}>
+        <Button
+          type="submit"
+          variant="primary"
+          isLoading={isLoading}
+          disabled={!titles.nl || !titles.en || !descriptions.nl || !descriptions.en || !!slugErrors.nl || !!slugErrors.en}
+        >
           {tCommon('save')}
         </Button>
         <Button

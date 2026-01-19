@@ -6,8 +6,9 @@ import {
   getPublicShowcaseItems,
   createShowcaseItem,
   isSlugAvailable,
+  isLocalizedSlugAvailable,
 } from '@/lib/kv';
-import { ShowcaseItem } from '@/lib/types';
+import { ShowcaseItem, SupportedLocale } from '@/lib/types';
 import { generateSlug, validateSlug } from '@/lib/slug';
 
 export async function GET(request: NextRequest) {
@@ -51,39 +52,88 @@ export async function POST(request: NextRequest) {
       keywords,
       is_public,
       slug: providedSlug,
+      // Multilingual fields
+      title_nl,
+      title_en,
+      slug_nl: providedSlugNl,
+      slug_en: providedSlugEn,
+      description_nl,
+      description_en,
     } = body;
 
-    if (!title || !description || !app_url) {
+    // Validate required multilingual fields
+    if (!title_nl || !title_en) {
       return NextResponse.json(
-        { error: 'Title, description, and app_url are required' },
+        { error: 'Title is required in both Dutch and English' },
         { status: 400 }
       );
     }
 
-    // Generate or validate slug
-    let slug = providedSlug || generateSlug(title);
-
-    if (!validateSlug(slug)) {
+    if (!description_nl || !description_en) {
       return NextResponse.json(
-        { error: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens.' },
+        { error: 'Description is required in both Dutch and English' },
         { status: 400 }
       );
     }
 
-    const slugAvailable = await isSlugAvailable(slug);
-    if (!slugAvailable) {
+    if (!app_url) {
       return NextResponse.json(
-        { error: 'This slug is already taken' },
+        { error: 'App URL is required' },
         { status: 400 }
       );
     }
 
+    // Generate or validate slugs for each language
+    const slug_nl = providedSlugNl || generateSlug(title_nl);
+    const slug_en = providedSlugEn || generateSlug(title_en);
+
+    // Validate slug formats
+    if (!validateSlug(slug_nl)) {
+      return NextResponse.json(
+        { error: 'Invalid Dutch slug format. Use only lowercase letters, numbers, and hyphens.' },
+        { status: 400 }
+      );
+    }
+
+    if (!validateSlug(slug_en)) {
+      return NextResponse.json(
+        { error: 'Invalid English slug format. Use only lowercase letters, numbers, and hyphens.' },
+        { status: 400 }
+      );
+    }
+
+    // Check slug availability for each language
+    const slugNlAvailable = await isLocalizedSlugAvailable(slug_nl, 'nl');
+    if (!slugNlAvailable) {
+      return NextResponse.json(
+        { error: 'The Dutch slug is already taken' },
+        { status: 400 }
+      );
+    }
+
+    const slugEnAvailable = await isLocalizedSlugAvailable(slug_en, 'en');
+    if (!slugEnAvailable) {
+      return NextResponse.json(
+        { error: 'The English slug is already taken' },
+        { status: 400 }
+      );
+    }
+
+    // For backward compatibility, use title_nl/slug_nl as default title/slug
     const now = new Date().toISOString();
     const item: ShowcaseItem = {
       id: uuid(),
-      title,
-      slug,
-      description,
+      title: title || title_nl,
+      slug: providedSlug || slug_nl,
+      description: description || description_nl,
+      // Multilingual fields
+      title_nl,
+      title_en,
+      slug_nl,
+      slug_en,
+      description_nl,
+      description_en,
+      // Other fields
       image_url: image_url || '',
       app_url,
       categories: categories || [],

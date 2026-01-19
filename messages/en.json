@@ -60,7 +60,13 @@
       "visibility": "Visibility",
       "image": "Image",
       "uploadImage": "Upload image",
-      "changeImage": "Change image"
+      "changeImage": "Change image",
+      "aiSuggest": "AI Suggest",
+      "translate": "Translate",
+      "translateFrom": "Translate from {lang}",
+      "languageStatus": "Language Status",
+      "complete": "Complete",
+      "incomplete": "Incomplete"
     }
   },
   "auth": {

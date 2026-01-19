@@ -5,6 +5,7 @@ import {
   updateShowcaseItem,
   deleteShowcaseItem,
   isSlugAvailable,
+  isLocalizedSlugAvailable,
 } from '@/lib/kv';
 import { validateSlug } from '@/lib/slug';
 
@@ -57,9 +58,16 @@ export async function PUT(
       keywords,
       is_public,
       slug,
+      // Multilingual fields
+      title_nl,
+      title_en,
+      slug_nl,
+      slug_en,
+      description_nl,
+      description_en,
     } = body;
 
-    // Validate slug if provided
+    // Validate slug if provided (backward compatibility)
     if (slug !== undefined) {
       if (!validateSlug(slug)) {
         return NextResponse.json(
@@ -77,6 +85,41 @@ export async function PUT(
       }
     }
 
+    // Validate localized slugs if provided
+    if (slug_nl !== undefined) {
+      if (!validateSlug(slug_nl)) {
+        return NextResponse.json(
+          { error: 'Invalid Dutch slug format. Use only lowercase letters, numbers, and hyphens.' },
+          { status: 400 }
+        );
+      }
+
+      const slugNlAvailable = await isLocalizedSlugAvailable(slug_nl, 'nl', params.id);
+      if (!slugNlAvailable) {
+        return NextResponse.json(
+          { error: 'The Dutch slug is already taken' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (slug_en !== undefined) {
+      if (!validateSlug(slug_en)) {
+        return NextResponse.json(
+          { error: 'Invalid English slug format. Use only lowercase letters, numbers, and hyphens.' },
+          { status: 400 }
+        );
+      }
+
+      const slugEnAvailable = await isLocalizedSlugAvailable(slug_en, 'en', params.id);
+      if (!slugEnAvailable) {
+        return NextResponse.json(
+          { error: 'The English slug is already taken' },
+          { status: 400 }
+        );
+      }
+    }
+
     const item = await updateShowcaseItem(params.id, {
       title,
       description,
@@ -86,6 +129,13 @@ export async function PUT(
       keywords,
       is_public,
       slug,
+      // Multilingual fields
+      title_nl,
+      title_en,
+      slug_nl,
+      slug_en,
+      description_nl,
+      description_en,
     });
 
     if (!item) {

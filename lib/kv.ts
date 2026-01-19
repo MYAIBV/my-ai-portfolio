@@ -1,4 +1,4 @@
-import { ShowcaseItem, User } from './types';
+import { ShowcaseItem, User, SupportedLocale } from './types';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import path from 'path';
 
@@ -122,6 +122,27 @@ export async function isSlugAvailable(
   const items = await getAllShowcaseItems();
   return !items.some(
     (item) => item.slug === slug && item.id !== excludeId
+  );
+}
+
+export async function getShowcaseItemByLocalizedSlug(
+  slug: string,
+  locale: SupportedLocale
+): Promise<ShowcaseItem | null> {
+  const items = await getAllShowcaseItems();
+  const slugField = locale === 'nl' ? 'slug_nl' : 'slug_en';
+  return items.find((item) => item[slugField] === slug) || null;
+}
+
+export async function isLocalizedSlugAvailable(
+  slug: string,
+  locale: SupportedLocale,
+  excludeId?: string
+): Promise<boolean> {
+  const items = await getAllShowcaseItems();
+  const slugField = locale === 'nl' ? 'slug_nl' : 'slug_en';
+  return !items.some(
+    (item) => item[slugField] === slug && item.id !== excludeId
   );
 }
 

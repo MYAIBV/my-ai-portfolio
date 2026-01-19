@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import Button from '../ui/Button';
-import { ShowcaseItem } from '@/lib/types';
+import { ShowcaseItem, SupportedLocale, getLocalizedContent } from '@/lib/types';
 
 interface ShowcaseCardProps {
   item: ShowcaseItem;
@@ -25,7 +25,12 @@ export default function ShowcaseCard({
 }: ShowcaseCardProps) {
   const t = useTranslations('showcase');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
+  const locale = useLocale() as SupportedLocale;
+
+  // Get localized content (with fallback to non-localized fields for backward compatibility)
+  const localizedContent = item.title_nl && item.title_en
+    ? getLocalizedContent(item, locale)
+    : { title: item.title, slug: item.slug, description: item.description };
 
   const cardContent = (
     <>
@@ -34,7 +39,7 @@ export default function ShowcaseCard({
         {item.image_url ? (
           <Image
             src={item.image_url}
-            alt={item.title}
+            alt={localizedContent.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -69,13 +74,13 @@ export default function ShowcaseCard({
         <div className="p-4 flex flex-col">
           {/* Title - always visible */}
           <h3 className="text-lg font-semibold text-white mb-1">
-            {item.title}
+            {localizedContent.title}
           </h3>
 
           {/* Description - revealed on hover */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
             <p className="text-sm text-gray-200 mb-3 line-clamp-2">
-              {item.description}
+              {localizedContent.description}
             </p>
 
             {showActions && (
@@ -111,10 +116,12 @@ export default function ShowcaseCard({
   );
 
   // Use Link for SEO when linkToProject is true and item has a slug
-  if (linkToProject && item.slug && item.is_public) {
+  // Use the locale-specific slug for the URL
+  const slug = localizedContent.slug || item.slug;
+  if (linkToProject && slug && item.is_public) {
     return (
       <Link
-        href={`/${locale}/project/${item.slug}`}
+        href={`/${locale}/project/${slug}`}
         className="relative h-72 rounded-xl overflow-hidden group cursor-pointer shadow-lg dark:shadow-gray-900/30 block"
       >
         {cardContent}
